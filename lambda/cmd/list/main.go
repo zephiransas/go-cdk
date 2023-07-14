@@ -1,26 +1,21 @@
 package main
 
 import (
+	"app/domain"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-type MyEvent struct {
-	Name string `json:"name"`
-}
-
-type MyResponse struct {
-	Message string `json:"message"`
-}
-
-func HandleEvent(c context.Context, event MyEvent) (string, error) {
-	r := MyResponse{
-		Message: fmt.Sprintf("Hello %s!", event.Name),
+func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	var todos []domain.Todo
+	for i := 0; i < 5; i++ {
+		todos = append(todos, domain.Todo{Id: fmt.Sprintf("id-%d", i), Title: fmt.Sprintf("todo %d", i), Done: false})
 	}
-	j, _ := json.Marshal(r)
-	return string(j), nil
+	j, _ := json.Marshal(domain.Todos{Todos: todos})
+	return events.APIGatewayProxyResponse{Body: string(j), StatusCode: 200}, nil
 }
 
 func main() {
