@@ -2,19 +2,28 @@ package main
 
 import (
 	"app/domain"
+	"app/service"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	var todos []domain.Todo
-	for i := 0; i < 5; i++ {
-		todos = append(todos, domain.Todo{Id: fmt.Sprintf("id-%d", i), Title: fmt.Sprintf("todo %d", i), Done: false})
+func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (res events.APIGatewayProxyResponse, err error) {
+	var s service.TodoService
+	if s, err = service.NewTodoService(c); err != nil {
+		return
 	}
-	j, _ := json.Marshal(domain.Todos{Todos: todos})
+
+	var todos []domain.Todo
+	if todos, err = s.List(c); err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: 503}, err
+	}
+
+	var j []byte
+	if j, err = json.Marshal(domain.Todos{Todos: todos}); err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: 503}, err
+	}
 	return events.APIGatewayProxyResponse{Body: string(j), StatusCode: 200}, nil
 }
 
