@@ -1,7 +1,9 @@
 package main
 
 import (
+	appContext "app/context"
 	"app/domain"
+	. "app/logger"
 	"app/service"
 	"context"
 	"encoding/json"
@@ -10,13 +12,16 @@ import (
 )
 
 func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (res events.APIGatewayProxyResponse, err error) {
+	ctx := appContext.SetRequestId(c)
+	Log(ctx).Info("START: todos/list")
+
 	var s service.TodoService
-	if s, err = service.NewTodoService(c); err != nil {
+	if s, err = service.NewTodoService(ctx); err != nil {
 		return
 	}
 
 	var todos []domain.Todo
-	if todos, err = s.List(c); err != nil {
+	if todos, err = s.List(ctx); err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 503}, err
 	}
 
