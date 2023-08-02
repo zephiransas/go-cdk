@@ -1,22 +1,24 @@
 import * as cdk from 'aws-cdk-lib';
+import * as ddb from 'aws-cdk-lib/aws-dynamodb'
+import * as apigateway from 'aws-cdk-lib/aws-apigateway'
+import * as lambda from '@aws-cdk/aws-lambda-go-alpha'
 import {RemovalPolicy, aws_iam as iam} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import * as lambda from '@aws-cdk/aws-lambda-go-alpha'
-import {AttributeType} from "aws-cdk-lib/aws-dynamodb";
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const table = new cdk.aws_dynamodb.Table(this, 'todo-table', {
+    // Dynamodb Table
+    const table = new ddb.Table(this, 'todo-table', {
       tableName: "todos-go",
       partitionKey: {
         name: "user_id",
-        type: AttributeType.STRING
+        type: ddb.AttributeType.STRING
       },
       sortKey: {
         name: "id",
-        type: AttributeType.NUMBER
+        type: ddb.AttributeType.NUMBER
       },
       readCapacity: 1,
       writeCapacity: 1,
@@ -45,11 +47,15 @@ export class CdkStack extends cdk.Stack {
       ]
     }))
 
-    const api = new cdk.aws_apigateway.RestApi(this, "todo-api")
+    // API Gateway
+    const api = new apigateway.RestApi(this, "todo-api")
 
-    const books = api.root.addResource("todos")
-    books.addMethod("GET", new cdk.aws_apigateway.LambdaIntegration(listHandler))
+    const todos = api.root.addResource("todos")
 
-    books.addMethod("POST", new cdk.aws_apigateway.LambdaIntegration(addHandler))
+    // GET /todos
+    todos.addMethod("GET", new cdk.aws_apigateway.LambdaIntegration(listHandler))
+    
+    // POST /todos
+    todos.addMethod("POST", new cdk.aws_apigateway.LambdaIntegration(addHandler))
   }
 }
