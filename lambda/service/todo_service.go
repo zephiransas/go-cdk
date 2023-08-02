@@ -9,6 +9,7 @@ import (
 
 type TodoService interface {
 	List(ctx context.Context) (todos []domain.Todo, err error)
+	Add(ctx context.Context, title string) (todo domain.Todo, err error)
 }
 
 type todoService struct {
@@ -25,6 +26,13 @@ func NewTodoService(ctx context.Context) (s TodoService, err error) {
 
 func (s *todoService) List(ctx context.Context) (todos []domain.Todo, err error) {
 	if todos, err = s.repo.List(ctx); err != nil {
+		return
+	}
+	return
+}
+
+func (s *todoService) Add(ctx context.Context, title string) (todo domain.Todo, err error) {
+	if todo, err = s.repo.Add(ctx, title); err != nil {
 		return
 	}
 	return

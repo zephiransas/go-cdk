@@ -34,10 +34,22 @@ export class CdkStack extends cdk.Stack {
       ]
     }))
 
+    const addHandler = new lambda.GoFunction(this, 'add-lambda', {
+      entry: '../lambda/cmd/add',
+    })
+    addHandler.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [table.tableArn],
+      actions: [
+        "dynamodb:PutItem",
+      ]
+    }))
+
     const api = new cdk.aws_apigateway.RestApi(this, "todo-api")
 
     const books = api.root.addResource("todos")
     books.addMethod("GET", new cdk.aws_apigateway.LambdaIntegration(listHandler))
 
+    books.addMethod("POST", new cdk.aws_apigateway.LambdaIntegration(addHandler))
   }
 }

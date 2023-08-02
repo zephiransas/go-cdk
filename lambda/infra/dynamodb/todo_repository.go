@@ -4,6 +4,7 @@ import (
 	"app/domain"
 	"app/domain/repository"
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -50,6 +51,36 @@ func (r *todoRepository) List(ctx context.Context) (todos []domain.Todo, err err
 	return
 }
 
+func (r *todoRepository) Add(ctx context.Context, title string) (todo domain.Todo, err error) {
+	var item map[string]types.AttributeValue
+	item = map[string]types.AttributeValue{
+		"user_id": toS("dummy"), // TODO
+		"id":      toN("100"),   // TODO
+		"title":   toS(title),
+		"done":    toBOOL(false),
+	}
+
+	if _, err = r.client.PutItem(ctx, &dynamodb.PutItemInput{
+		Item:      item,
+		TableName: aws.String("todos-go"),
+	}); err != nil {
+		return
+	}
+
+	if err = attributevalue.UnmarshalMap(item, &todo); err != nil {
+		return
+	}
+	return
+}
+
 func toS(v string) *types.AttributeValueMemberS {
 	return &types.AttributeValueMemberS{Value: v}
+}
+
+func toN(v string) *types.AttributeValueMemberN {
+	return &types.AttributeValueMemberN{Value: v}
+}
+
+func toBOOL(v bool) *types.AttributeValueMemberBOOL {
+	return &types.AttributeValueMemberBOOL{Value: v}
 }
