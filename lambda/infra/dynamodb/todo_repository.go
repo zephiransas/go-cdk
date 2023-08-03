@@ -28,12 +28,12 @@ func NewTodoRepository(ctx context.Context) (r repository.TodoRepository, err er
 	return
 }
 
-func (r *todoRepository) List(ctx context.Context) (todos []domain.Todo, err error) {
+func (r *todoRepository) List(ctx context.Context, sub string) (todos []domain.Todo, err error) {
 	var out *dynamodb.QueryOutput
 
 	// TODO: Replace github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression
 	expression := "user_id = :user_id"
-	expValue := map[string]types.AttributeValue{":user_id": toS("dummy")}
+	expValue := map[string]types.AttributeValue{":user_id": toS(sub)}
 
 	var input *dynamodb.QueryInput
 	input = &dynamodb.QueryInput{
@@ -51,11 +51,11 @@ func (r *todoRepository) List(ctx context.Context) (todos []domain.Todo, err err
 	return
 }
 
-func (r *todoRepository) Add(ctx context.Context, title string) (todo domain.Todo, err error) {
+func (r *todoRepository) Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error) {
 	var item map[string]types.AttributeValue
 	item = map[string]types.AttributeValue{
-		"user_id": toS("dummy"), // TODO
-		"id":      toN("100"),   // TODO
+		"user_id": toS(sub),
+		"id":      toN("100"), // TODO
 		"title":   toS(title),
 		"done":    toBOOL(false),
 	}

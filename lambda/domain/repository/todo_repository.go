@@ -6,7 +6,7 @@ import (
 )
 
 type TodoRepository interface {
-	List(ctx context.Context) (todos []domain.Todo, err error)
+	List(ctx context.Context, sub string) (todos []domain.Todo, err error)
 
-	Add(ctx context.Context, title string) (todo domain.Todo, err error)
+	Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error)
 }

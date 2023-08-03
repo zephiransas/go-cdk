@@ -25,7 +25,7 @@ func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (res even
 	}
 
 	var todos []domain.Todo
-	if todos, err = s.List(ctx); err != nil {
+	if todos, err = s.List(ctx, req.RequestContext.Authorizer["sub"].(string)); err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 503}, err
 	}
 
