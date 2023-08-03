@@ -29,9 +29,13 @@ func HandleEvent(c context.Context, event events.APIGatewayCustomAuthorizerReque
 	res.APIID = apiGatewayArnTmp[0]
 	res.Stage = apiGatewayArnTmp[1]
 
-	b, err := verifyJWTToken(ctx, event)
-	if b {
+	sub, err := verifyJWTToken(ctx, event)
+	if err == nil {
 		res.addMethod(Allow, apiGatewayArnTmp[2], "*")
+		info := map[string]interface{}{
+			"sub": sub,
+		}
+		res.Context = info
 	} else {
 		Log(ctx).Debug(err)
 		res.addMethod(Deny, apiGatewayArnTmp[2], "*")
@@ -40,7 +44,7 @@ func HandleEvent(c context.Context, event events.APIGatewayCustomAuthorizerReque
 	return res.APIGatewayCustomAuthorizerResponse, nil
 }
 
-func verifyJWTToken(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest) (bool, error) {
+func verifyJWTToken(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest) (sub string, err error) {
 	cfg, _ := config.LoadDefaultConfig(ctx)
 	client := cognitoidentityprovider.NewFromConfig(cfg)
 
@@ -48,13 +52,17 @@ func verifyJWTToken(ctx context.Context, event events.APIGatewayCustomAuthorizer
 		AccessToken: &event.AuthorizationToken,
 	})
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	Log(ctx).Info(*u.UserAttributes[0].Value) //sub
 	Log(ctx).Info(*u.UserAttributes[1].Value) //email
 
-	return true, nil
+	return *u.UserAttributes[0].Value, nil
+}
+
+func addUserInfo(ctx context.Context, sub string) context.Context {
+	return context.WithValue(ctx, "sub", sub)
 }
 
 type Effect int

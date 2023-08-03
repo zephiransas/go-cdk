@@ -2,6 +2,7 @@ package context
 
 import (
 	"context"
+
 	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
