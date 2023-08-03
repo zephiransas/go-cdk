@@ -53,6 +53,16 @@ export class CdkStack extends cdk.Stack {
       ]
     }))
 
+
+    const authorizerHandler = new lambda.GoFunction(this, 'authorizer-lambda', {
+      entry: '../lambda/cmd/authorizer'
+    })
+
+    const authorizer = new apigateway.TokenAuthorizer(this, 'token-authorizer', {
+      handler: authorizerHandler,
+      identitySource: apigateway.IdentitySource.header("Authorization")
+    })
+
     const listHandler = new lambda.GoFunction(this, 'list-lambda', {
       entry: '../lambda/cmd/list',
     })
@@ -84,9 +94,13 @@ export class CdkStack extends cdk.Stack {
     const todos = api.root.addResource("todos")
 
     // GET /todos
-    todos.addMethod("GET", new cdk.aws_apigateway.LambdaIntegration(listHandler))
+    todos.addMethod("GET", new cdk.aws_apigateway.LambdaIntegration(listHandler),{
+      authorizer: authorizer
+    })
     
     // POST /todos
-    todos.addMethod("POST", new cdk.aws_apigateway.LambdaIntegration(addHandler))
+    todos.addMethod("POST", new cdk.aws_apigateway.LambdaIntegration(addHandler), {
+      authorizer: authorizer
+    })
   }
 }
