@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ddb from 'aws-cdk-lib/aws-dynamodb'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as lambda from '@aws-cdk/aws-lambda-go-alpha'
+import * as logs from 'aws-cdk-lib/aws-logs'
 import {RemovalPolicy, aws_iam as iam} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
@@ -23,7 +24,18 @@ export class CdkStack extends cdk.Stack {
       },
       readCapacity: 1,
       writeCapacity: 1,
-      removalPolicy: RemovalPolicy.RETAIN
+      removalPolicy: RemovalPolicy.DESTROY  //WARN
+    })
+
+    const counterTable = new ddb.Table(this, 'todo-counter-table', {
+      tableName: "todos-go-counter",
+      partitionKey: {
+        name: "user_id",
+        type: ddb.AttributeType.STRING
+      },
+      readCapacity: 1,
+      writeCapacity: 1,
+      removalPolicy: RemovalPolicy.DESTROY  //WARN
     })
 
 
@@ -82,6 +94,13 @@ export class CdkStack extends cdk.Stack {
       resources: [table.tableArn],
       actions: [
         "dynamodb:PutItem",
+      ]
+    }))
+    addHandler.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [counterTable.tableArn],
+      actions: [
+        "dynamodb:UpdateItem",
       ]
     }))
 

@@ -4,6 +4,7 @@ import (
 	"app/domain"
 	"app/domain/repository"
 	"context"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -52,10 +53,14 @@ func (r *todoRepository) List(ctx context.Context, sub string) (todos []domain.T
 }
 
 func (r *todoRepository) Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error) {
-	var item map[string]types.AttributeValue
-	item = map[string]types.AttributeValue{
+	var id int
+	if id, err = r.generateId(ctx, sub); err != nil {
+		return
+	}
+
+	item := map[string]types.AttributeValue{
 		"user_id": toS(sub),
-		"id":      toN("100"), // TODO
+		"id":      toN(strconv.Itoa(id)),
 		"title":   toS(title),
 		"done":    toBOOL(false),
 	}
@@ -71,6 +76,40 @@ func (r *todoRepository) Add(ctx context.Context, sub string, title string) (tod
 		return
 	}
 	return
+}
+
+func (r *todoRepository) generateId(ctx context.Context, sub string) (id int, err error) {
+	var res *dynamodb.UpdateItemOutput
+
+	res, err = r.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String("todos-go-counter"),
+		Key: map[string]types.AttributeValue{
+			"user_id": toS(sub),
+		},
+		UpdateExpression: aws.String("SET #value = if_not_exists(#value, :start) + :incr"),
+		ExpressionAttributeNames: map[string]string{
+			"#value": "id",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":incr":  toN("1"),
+			":start": toN("0"),
+		},
+		ReturnValues: types.ReturnValueUpdatedNew,
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	c := Response{}
+	if err = attributevalue.UnmarshalMap(res.Attributes, &c); err != nil {
+		return 0, err
+	}
+
+	return c.Id, nil
+}
+
+type Response struct {
+	Id int `dynamodbav:"id"`
 }
 
 func toS(v string) *types.AttributeValueMemberS {
