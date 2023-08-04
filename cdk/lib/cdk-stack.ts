@@ -72,6 +72,7 @@ export class CdkStack extends cdk.Stack {
 
     const authorizer = new apigateway.TokenAuthorizer(this, 'token-authorizer', {
       handler: authorizerHandler,
+      resultsCacheTtl: cdk.Duration.seconds(0),   //cacheを無効にする
       identitySource: apigateway.IdentitySource.header("Authorization")
     })
 
