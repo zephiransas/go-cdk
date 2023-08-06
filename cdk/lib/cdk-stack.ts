@@ -1,12 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ddb from 'aws-cdk-lib/aws-dynamodb'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
-import * as lambda from '@aws-cdk/aws-lambda-go-alpha'
 import {RemovalPolicy, aws_iam as iam} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { TodoResources } from './lambda/todo-resources';
 import { AuthResources } from './lambda/auth-resources';
+import { TodoApi } from './api/todo-api';
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -55,27 +54,9 @@ export class CdkStack extends cdk.Stack {
     const oauth = api.root.addResource("oauth")
     oauth.addResource("login").addMethod("GET", new apigateway.LambdaIntegration(authResources.loginHandler))
 
-    const todos = api.root.addResource("todos")
 
-    // GET /todos
-    todos.addMethod("GET", new apigateway.LambdaIntegration(todoResources.listHandler),{
-      authorizer: authorizer
-    })
+    // Todo
+    new TodoApi(api, todoResources, authorizer)
 
-    // GET /todos/:id
-    const showTodo = todos.addResource("{id}")
-    showTodo.addMethod("GET", new apigateway.LambdaIntegration(todoResources.getHandler), {
-      authorizer: authorizer
-    })
-
-    // POST /todos/:id./_done
-    const domeTodo = showTodo.addResource("_done").addMethod("POST", new apigateway.LambdaIntegration(todoResources.donetHandler), {
-      authorizer: authorizer
-    })
-    
-    // POST /todos
-    todos.addMethod("POST", new apigateway.LambdaIntegration(todoResources.addHandler), {
-      authorizer: authorizer
-    })
   }
 }
