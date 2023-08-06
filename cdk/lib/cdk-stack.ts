@@ -6,6 +6,7 @@ import {RemovalPolicy, aws_iam as iam} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { TodoResources } from './lambda/todo-resources';
+import { AuthResources } from './lambda/auth-resources';
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -38,40 +39,10 @@ export class CdkStack extends cdk.Stack {
       removalPolicy: RemovalPolicy.DESTROY  //WARN
     })
 
-
-    const poolId = StringParameter.valueForStringParameter(this, "/go-cdk/poolId")
-    const clientId = StringParameter.valueForStringParameter(this, "/go-cdk/clientId")
-
-    const loginHandler = new lambda.GoFunction(this, 'login-lambda', {
-      entry: '../lambda/cmd/login',
-      environment: {
-        "POOL_ID": poolId,
-        "CLIENT_ID": clientId,
-        // CLIENT_SECRETは、都度Lambdaから取得する
-      }
-    })
-    loginHandler.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: ["arn:aws:cognito-idp:ap-northeast-1:919951165082:userpool/ap-northeast-1_43WZ6LiP3"],
-      actions: [
-        "cognito-idp:AdminInitiateAuth",
-      ]
-    }))
-    loginHandler.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: ["arn:aws:ssm:ap-northeast-1:919951165082:parameter/go-cdk/clientSecret"],
-      actions: [
-        "ssm:GetParameter",
-      ]
-    }))
-
-
-    const authorizerHandler = new lambda.GoFunction(this, 'authorizer-lambda', {
-      entry: '../lambda/cmd/authorizer'
-    })
+    const authResources = new AuthResources(this)
 
     const authorizer = new apigateway.TokenAuthorizer(this, 'token-authorizer', {
-      handler: authorizerHandler,
+      handler: authResources.authorizeHandler,
       resultsCacheTtl: cdk.Duration.seconds(0),   //cacheを無効にする
       identitySource: apigateway.IdentitySource.header("Authorization")
     })
@@ -82,7 +53,7 @@ export class CdkStack extends cdk.Stack {
     const api = new apigateway.RestApi(this, "todo-api")
 
     const oauth = api.root.addResource("oauth")
-    oauth.addResource("login").addMethod("GET", new apigateway.LambdaIntegration(loginHandler))
+    oauth.addResource("login").addMethod("GET", new apigateway.LambdaIntegration(authResources.loginHandler))
 
     const todos = api.root.addResource("todos")
 
