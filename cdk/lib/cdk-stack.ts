@@ -105,6 +105,17 @@ export class CdkStack extends cdk.Stack {
       ]
     }))
 
+    const showHandler = new lambda.GoFunction(this, 'show-lambda', {
+      entry: '../lambda/cmd/show',
+    })
+    showHandler.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [table.tableArn],
+      actions: [
+        "dynamodb:GetItem",
+      ]
+    }))
+
     // API Gateway
     const api = new apigateway.RestApi(this, "todo-api")
 
@@ -114,12 +125,18 @@ export class CdkStack extends cdk.Stack {
     const todos = api.root.addResource("todos")
 
     // GET /todos
-    todos.addMethod("GET", new cdk.aws_apigateway.LambdaIntegration(listHandler),{
+    todos.addMethod("GET", new apigateway.LambdaIntegration(listHandler),{
+      authorizer: authorizer
+    })
+
+    // GET /todos/:id
+    const showTodo = todos.addResource("{id}")
+    showTodo.addMethod("GET", new apigateway.LambdaIntegration(showHandler), {
       authorizer: authorizer
     })
     
     // POST /todos
-    todos.addMethod("POST", new cdk.aws_apigateway.LambdaIntegration(addHandler), {
+    todos.addMethod("POST", new apigateway.LambdaIntegration(addHandler), {
       authorizer: authorizer
     })
   }

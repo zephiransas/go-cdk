@@ -10,6 +10,7 @@ import (
 type TodoService interface {
 	List(ctx context.Context, sub string) (todos []domain.Todo, err error)
 	Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error)
+	Get(ctx context.Context, sub string, id string) (todo domain.Todo, err error)
 }
 
 type todoService struct {
@@ -33,6 +34,13 @@ func (s *todoService) List(ctx context.Context, sub string) (todos []domain.Todo
 
 func (s *todoService) Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error) {
 	if todo, err = s.repo.Add(ctx, sub, title); err != nil {
+		return
+	}
+	return
+}
+
+func (s *todoService) Get(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
+	if todo, err = s.repo.Get(ctx, sub, id); err != nil {
 		return
 	}
 	return

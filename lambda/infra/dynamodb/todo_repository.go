@@ -3,7 +3,9 @@ package dynamodb
 import (
 	"app/domain"
 	"app/domain/repository"
+	. "app/logger"
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -73,6 +75,33 @@ func (r *todoRepository) Add(ctx context.Context, sub string, title string) (tod
 	}
 
 	if err = attributevalue.UnmarshalMap(item, &todo); err != nil {
+		return
+	}
+	return
+}
+
+func (r *todoRepository) Get(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
+	var out *dynamodb.GetItemOutput
+
+	Log(ctx).Debug(fmt.Sprintf("sub = %s, id = %s", sub, id))
+
+	out, err = r.client.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: aws.String("todos-go"),
+		Key: map[string]types.AttributeValue{
+			"user_id": toS(sub),
+			"id":      toN(id),
+		},
+	})
+	if err != nil {
+		return
+	}
+
+	if out.Item == nil {
+		err = NewResourceNotFoundError()
+		return
+	}
+
+	if err = attributevalue.UnmarshalMap(out.Item, &todo); err != nil {
 		return
 	}
 	return
