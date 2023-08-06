@@ -2,10 +2,10 @@ import * as cdk from 'aws-cdk-lib';
 import * as ddb from 'aws-cdk-lib/aws-dynamodb'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as lambda from '@aws-cdk/aws-lambda-go-alpha'
-import * as logs from 'aws-cdk-lib/aws-logs'
 import {RemovalPolicy, aws_iam as iam} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { TodoResources } from './lambda/todo-resources';
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -76,57 +76,7 @@ export class CdkStack extends cdk.Stack {
       identitySource: apigateway.IdentitySource.header("Authorization")
     })
 
-    const listHandler = new lambda.GoFunction(this, 'list-lambda', {
-      entry: '../lambda/cmd/list',
-    })
-    listHandler.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: [table.tableArn],
-      actions: [
-          "dynamodb:Query",
-      ]
-    }))
-
-    const addHandler = new lambda.GoFunction(this, 'add-lambda', {
-      entry: '../lambda/cmd/add',
-    })
-    addHandler.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: [table.tableArn],
-      actions: [
-        "dynamodb:PutItem",
-      ]
-    }))
-    addHandler.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: [counterTable.tableArn],
-      actions: [
-        "dynamodb:UpdateItem",
-      ]
-    }))
-
-    const showHandler = new lambda.GoFunction(this, 'show-lambda', {
-      entry: '../lambda/cmd/show',
-    })
-    showHandler.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: [table.tableArn],
-      actions: [
-        "dynamodb:GetItem",
-      ]
-    }))
-
-    const doneHandler = new lambda.GoFunction(this, 'done-lambda', {
-      entry: '../lambda/cmd/done',
-    })
-    doneHandler.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: [table.tableArn],
-      actions: [
-        "dynamodb:UpdateItem",
-      ]
-    }))
-
+    const todoResources = new TodoResources(this, table, counterTable)
 
     // API Gateway
     const api = new apigateway.RestApi(this, "todo-api")
@@ -137,23 +87,23 @@ export class CdkStack extends cdk.Stack {
     const todos = api.root.addResource("todos")
 
     // GET /todos
-    todos.addMethod("GET", new apigateway.LambdaIntegration(listHandler),{
+    todos.addMethod("GET", new apigateway.LambdaIntegration(todoResources.listHandler),{
       authorizer: authorizer
     })
 
     // GET /todos/:id
     const showTodo = todos.addResource("{id}")
-    showTodo.addMethod("GET", new apigateway.LambdaIntegration(showHandler), {
+    showTodo.addMethod("GET", new apigateway.LambdaIntegration(todoResources.getHandler), {
       authorizer: authorizer
     })
 
     // POST /todos/:id./_done
-    const domeTodo = showTodo.addResource("_done").addMethod("POST", new apigateway.LambdaIntegration(doneHandler), {
+    const domeTodo = showTodo.addResource("_done").addMethod("POST", new apigateway.LambdaIntegration(todoResources.donetHandler), {
       authorizer: authorizer
     })
     
     // POST /todos
-    todos.addMethod("POST", new apigateway.LambdaIntegration(addHandler), {
+    todos.addMethod("POST", new apigateway.LambdaIntegration(todoResources.addHandler), {
       authorizer: authorizer
     })
   }
