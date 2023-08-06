@@ -116,6 +116,18 @@ export class CdkStack extends cdk.Stack {
       ]
     }))
 
+    const doneHandler = new lambda.GoFunction(this, 'done-lambda', {
+      entry: '../lambda/cmd/done',
+    })
+    doneHandler.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [table.tableArn],
+      actions: [
+        "dynamodb:UpdateItem",
+      ]
+    }))
+
+
     // API Gateway
     const api = new apigateway.RestApi(this, "todo-api")
 
@@ -132,6 +144,11 @@ export class CdkStack extends cdk.Stack {
     // GET /todos/:id
     const showTodo = todos.addResource("{id}")
     showTodo.addMethod("GET", new apigateway.LambdaIntegration(showHandler), {
+      authorizer: authorizer
+    })
+
+    // POST /todos/:id./_done
+    const domeTodo = showTodo.addResource("_done").addMethod("POST", new apigateway.LambdaIntegration(doneHandler), {
       authorizer: authorizer
     })
     

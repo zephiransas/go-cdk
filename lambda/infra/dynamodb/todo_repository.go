@@ -107,6 +107,33 @@ func (r *todoRepository) Get(ctx context.Context, sub string, id string) (todo d
 	return
 }
 
+func (r *todoRepository) Done(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
+	var res *dynamodb.UpdateItemOutput
+
+	res, err = r.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String("todos-go"),
+		Key: map[string]types.AttributeValue{
+			"user_id": toS(sub),
+			"id":      toN(id),
+		},
+		UpdateExpression: aws.String("SET #value = :done"),
+		ExpressionAttributeNames: map[string]string{
+			"#value": "done",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":done": toBOOL(true),
+		},
+		ReturnValues: types.ReturnValueAllNew,
+	})
+	if err != nil {
+		return domain.Todo{}, err
+	}
+	if err = attributevalue.UnmarshalMap(res.Attributes, &todo); err != nil {
+		return domain.Todo{}, err
+	}
+	return
+}
+
 func (r *todoRepository) generateId(ctx context.Context, sub string) (id int, err error) {
 	var res *dynamodb.UpdateItemOutput
 
