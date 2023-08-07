@@ -29,14 +29,14 @@ export class AuthResources {
     })
     loginHandler.addToRolePolicy(new PolicyStatement({
       effect: Effect.ALLOW,
-      resources: ["arn:aws:cognito-idp:ap-northeast-1:919951165082:userpool/ap-northeast-1_43WZ6LiP3"],
+      resources: [`arn:aws:cognito-idp:ap-northeast-1:${process.env.AWS_ACCOUNT_ID}:userpool/${process.env.USER_POOL_ID}`],
       actions: [
         "cognito-idp:AdminInitiateAuth",
       ]
     }))
     loginHandler.addToRolePolicy(new PolicyStatement({
       effect: Effect.ALLOW,
-      resources: ["arn:aws:ssm:ap-northeast-1:919951165082:parameter/go-cdk/clientSecret"],
+      resources: [`arn:aws:ssm:ap-northeast-1:${process.env.AWS_ACCOUNT_ID}:parameter/go-cdk/clientSecret`],
       actions: [
         "ssm:GetParameter",
       ]
