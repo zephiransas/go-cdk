@@ -12,6 +12,7 @@ type TodoService interface {
 	Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error)
 	Get(ctx context.Context, sub string, id string) (todo domain.Todo, err error)
 	Done(ctx context.Context, sub string, id string) (todo domain.Todo, err error)
+	Delete(ctx context.Context, sub string, id string) (todo domain.Todo, err error)
 }
 
 type todoService struct {
@@ -49,6 +50,14 @@ func (s *todoService) Get(ctx context.Context, sub string, id string) (todo doma
 
 func (s *todoService) Done(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
 	if todo, err = s.repo.Done(ctx, sub, id); err != nil {
+		return
+	}
+
+	return
+}
+
+func (s *todoService) Delete(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
+	if todo, err = s.repo.Delete(ctx, sub, id); err != nil {
 		return
 	}
 

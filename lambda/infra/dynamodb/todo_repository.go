@@ -126,10 +126,36 @@ func (r *todoRepository) Done(ctx context.Context, sub string, id string) (todo 
 		ReturnValues: types.ReturnValueAllNew,
 	})
 	if err != nil {
-		return domain.Todo{}, err
+		return
 	}
 	if err = attributevalue.UnmarshalMap(res.Attributes, &todo); err != nil {
-		return domain.Todo{}, err
+		return
+	}
+	return
+}
+
+func (r *todoRepository) Delete(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
+	var res *dynamodb.DeleteItemOutput
+
+	res, err = r.client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+		TableName: aws.String("todos-go"),
+		Key: map[string]types.AttributeValue{
+			"user_id": toS(sub),
+			"id":      toN(id),
+		},
+		ReturnValues: types.ReturnValueAllOld,
+	})
+	if err != nil {
+		return
+	}
+
+	if res.Attributes == nil {
+		err = NewResourceNotFoundError()
+		return
+	}
+
+	if err = attributevalue.UnmarshalMap(res.Attributes, &todo); err != nil {
+		return
 	}
 	return
 }
@@ -153,12 +179,12 @@ func (r *todoRepository) generateId(ctx context.Context, sub string) (id int, er
 		ReturnValues: types.ReturnValueUpdatedNew,
 	})
 	if err != nil {
-		return 0, err
+		return
 	}
 
 	c := Response{}
 	if err = attributevalue.UnmarshalMap(res.Attributes, &c); err != nil {
-		return 0, err
+		return
 	}
 
 	return c.Id, nil

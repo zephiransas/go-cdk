@@ -12,6 +12,7 @@ export class TodoResources {
   readonly addHandler: lambda.Function
   readonly getHandler: lambda.Function
   readonly doneHandler: lambda.Function
+  readonly deleteHandler: lambda.Function
 
   constructor(scope: Construct, todoTable: ddb.Table, todoCounterTable: ddb.Table) {
     this.todoTable = todoTable
@@ -20,6 +21,7 @@ export class TodoResources {
     this.addHandler = this.createAddHandler(scope)
     this.getHandler = this.createGetHandler(scope)
     this.doneHandler = this.createDoneHandler(scope)
+    this.deleteHandler = this.createDeleteHandler(scope)
   }
 
   private createListHandler: (scope: Construct) => lambda.Function = scope => {
@@ -84,6 +86,20 @@ export class TodoResources {
       ]
     }))
     return doneHandler
+  }
+
+  private createDeleteHandler: (scope: Construct) => lambda.Function = scope => {
+    const f = new GoFunction(scope, 'todos-delete-lambda', {
+      entry: '../lambda/cmd/delete',
+    })
+    f.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [this.todoTable.tableArn],
+      actions: [
+        "dynamodb:DeleteItem",
+      ]
+    }))
+    return f
   }
 
 }

@@ -10,4 +10,5 @@ type TodoRepository interface {
 	Get(ctx context.Context, sub string, id string) (todo domain.Todo, err error)
 	Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error)
 	Done(ctx context.Context, sub string, title string) (todo domain.Todo, err error)
+	Delete(ctx context.Context, sub string, title string) (todo domain.Todo, err error)
 }

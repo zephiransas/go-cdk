@@ -18,6 +18,11 @@ export class TodoApi {
       authorizer: authorizer
     })
 
+    // DELETE /todos/:id
+    showTodo.addMethod("DELETE", new apigateway.LambdaIntegration(resources.deleteHandler), {
+      authorizer: authorizer
+    })
+
     // POST /todos/:id./_done
     showTodo.addResource("_done").addMethod("POST", new apigateway.LambdaIntegration(resources.doneHandler), {
       authorizer: authorizer
