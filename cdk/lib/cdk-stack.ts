@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ddb from 'aws-cdk-lib/aws-dynamodb'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
-import {RemovalPolicy, aws_iam as iam} from 'aws-cdk-lib';
+import {RemovalPolicy} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import { TodoResources } from './lambda/todo-resources';
 import { AuthResources } from './lambda/auth-resources';

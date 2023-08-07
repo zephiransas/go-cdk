@@ -19,7 +19,7 @@ export class TodoApi {
     })
 
     // POST /todos/:id./_done
-    const domeTodo = showTodo.addResource("_done").addMethod("POST", new apigateway.LambdaIntegration(resources.donetHandler), {
+    showTodo.addResource("_done").addMethod("POST", new apigateway.LambdaIntegration(resources.doneHandler), {
       authorizer: authorizer
     })
 

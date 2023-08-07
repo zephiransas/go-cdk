@@ -11,7 +11,7 @@ export class TodoResources {
   readonly listHandler: lambda.Function
   readonly addHandler: lambda.Function
   readonly getHandler: lambda.Function
-  readonly donetHandler: lambda.Function
+  readonly doneHandler: lambda.Function
 
   constructor(scope: Construct, todoTable: ddb.Table, todoCounterTable: ddb.Table) {
     this.todoTable = todoTable
@@ -19,7 +19,7 @@ export class TodoResources {
     this.listHandler = this.createListHandler(scope)
     this.addHandler = this.createAddHandler(scope)
     this.getHandler = this.createGetHandler(scope)
-    this.donetHandler = this.createDoneHandler(scope)
+    this.doneHandler = this.createDoneHandler(scope)
   }
 
   private createListHandler: (scope: Construct) => lambda.Function = scope => {
