@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  localstack:
+    container_name: go-cdk-localstack
+    image: localstack/localstack:0.14
+    ports:
+      - "4566:4566"
+    environment:
+      DEFAULT_REGION: ap-northeast-1
+      SERVICES: dynamodb
+      DEBUG: 1
+      DOCKER_HOST: unix:///var/run/docker.sock
+    volumes:
+      - ${TMPDIR:-/tmp/localstack}:/tmp/localstack
+      - ./stubs/localstack:/docker-entrypoint-initaws.d
