@@ -4,12 +4,12 @@ import (
 	"app/domain"
 	"app/domain/repository"
 	. "app/logger"
+	"app/util"
 	"context"
 	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -20,11 +20,8 @@ type todoRepository struct {
 }
 
 func NewTodoRepository(ctx context.Context) (r repository.TodoRepository, err error) {
-	var cfg aws.Config
-	cfg, _ = config.LoadDefaultConfig(ctx, func(o *config.LoadOptions) error {
-		o.Region = "ap-northeast-1"
-		return nil
-	})
+	c := NewConfig()
+	cfg, _ := util.LoadDefaultConfig(ctx, c.region, c.endpoint, c.service)
 	r = &todoRepository{
 		client: dynamodb.NewFromConfig(cfg),
 	}
