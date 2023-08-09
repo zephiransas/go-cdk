@@ -7,6 +7,7 @@ import (
 	"app/util"
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,15 +32,16 @@ func NewTodoRepository(ctx context.Context) (r repository.TodoRepository, err er
 func (r *todoRepository) List(ctx context.Context, sub string) (todos []domain.Todo, err error) {
 	var out *dynamodb.QueryOutput
 
-	// TODO: Replace github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression
-	expression := "user_id = :user_id"
-	expValue := map[string]types.AttributeValue{":user_id": toS(sub)}
+	// ref: https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/gov2/dynamodb
+	ex := expression.Key("user_id").Equal(expression.Value(sub))
+	expr, _ := expression.NewBuilder().WithKeyCondition(ex).Build()
 
 	var input *dynamodb.QueryInput
 	input = &dynamodb.QueryInput{
 		TableName:                 aws.String("todos-go"),
-		KeyConditionExpression:    &expression,
-		ExpressionAttributeValues: expValue,
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
 	}
 
 	if out, err = r.client.Query(ctx, input); err != nil {
