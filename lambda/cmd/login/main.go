@@ -8,8 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"os"
-
+	"errors"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"os"
 )
 
 var poolId = os.Getenv("POOL_ID")
@@ -61,6 +61,13 @@ func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (res even
 			"SECRET_HASH": hash,
 		},
 	}); err != nil {
+		// if notAuth, ok := err.(*types.NotAuthorizedException); ok {... でハンドルできないか？
+		var notAuth *types.NotAuthorizedException
+		if errors.As(err, &notAuth) {
+			Log(ctx).Info(err)
+			return events.APIGatewayProxyResponse{StatusCode: 401}, nil
+		}
+
 		Log(ctx).Error(err)
 		return events.APIGatewayProxyResponse{StatusCode: 503}, err
 	}
