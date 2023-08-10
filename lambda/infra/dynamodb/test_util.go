@@ -1,11 +1,9 @@
 package dynamodb
 
 import (
-	"app/domain"
 	"app/util"
 	"context"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/stretchr/testify/assert"
@@ -34,17 +32,39 @@ func createClient(t *testing.T, ctx context.Context) *dynamodb.Client {
 	return dynamodb.NewFromConfig(awsCfg)
 }
 
-func PutItem(t *testing.T, ctx context.Context, todo domain.Todo) {
+func PutItem(t *testing.T, ctx context.Context, tableName string, item map[string]types.AttributeValue) {
 	c := createClient(t, ctx)
-	var av map[string]types.AttributeValue
-
-	av, err := attributevalue.MarshalMap(todo)
-	assert.NoError(t, err)
-
-	_, err = c.PutItem(ctx, &dynamodb.PutItemInput{
-		Item:      av,
-		TableName: aws.String("todos-go"),
+	_, err := c.PutItem(ctx, &dynamodb.PutItemInput{
+		Item:      item,
+		TableName: aws.String(tableName),
 	})
 	assert.NoError(t, err)
 	return
+}
+
+func CleanTable(t *testing.T, ctx context.Context, tableName string) {
+	c := createClient(t, ctx)
+
+	desc, err := c.DescribeTable(ctx, &dynamodb.DescribeTableInput{
+		TableName: aws.String(tableName),
+	})
+	assert.NoError(t, err)
+
+	out, err := c.Scan(ctx, &dynamodb.ScanInput{
+		TableName: aws.String(tableName),
+	})
+	assert.NoError(t, err)
+
+	for _, i := range out.Items {
+		key := make(map[string]types.AttributeValue)
+
+		for _, k := range desc.Table.KeySchema {
+			key[*k.AttributeName] = i[*k.AttributeName]
+		}
+		_, err := c.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+			Key:       key,
+			TableName: aws.String(tableName),
+		})
+		assert.NoError(t, err)
+	}
 }

@@ -13,3 +13,5 @@ aws_local() {
 # dynamo db
 aws_local dynamodb create-table \
   --cli-input-json "file://$SCRIPT_DIR/todos-go.json"
+aws_local dynamodb create-table \
+  --cli-input-json "file://$SCRIPT_DIR/todos-go-counter.json"

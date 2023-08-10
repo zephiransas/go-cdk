@@ -17,14 +17,20 @@ import (
 )
 
 type todoRepository struct {
-	client *dynamodb.Client
+	client  *dynamodb.Client
+	counter repository.CounterRepository
 }
 
 func NewTodoRepository(ctx context.Context) (r repository.TodoRepository, err error) {
 	c := NewConfig()
 	cfg, _ := util.LoadDefaultConfig(ctx, c.region, c.endpoint, c.service)
+	cr, err := NewCounterRepository(ctx)
+	if err != nil {
+		return
+	}
 	r = &todoRepository{
-		client: dynamodb.NewFromConfig(cfg),
+		client:  dynamodb.NewFromConfig(cfg),
+		counter: cr,
 	}
 	return
 }
@@ -55,7 +61,7 @@ func (r *todoRepository) List(ctx context.Context, sub string) (todos []domain.T
 
 func (r *todoRepository) Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error) {
 	var id int
-	if id, err = r.generateId(ctx, sub); err != nil {
+	if id, err = r.counter.GenerateId(ctx, sub); err != nil {
 		return
 	}
 
@@ -157,40 +163,6 @@ func (r *todoRepository) Delete(ctx context.Context, sub string, id string) (tod
 		return
 	}
 	return
-}
-
-func (r *todoRepository) generateId(ctx context.Context, sub string) (id int, err error) {
-	var res *dynamodb.UpdateItemOutput
-
-	res, err = r.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		TableName: aws.String("todos-go-counter"),
-		Key: map[string]types.AttributeValue{
-			"user_id": toS(sub),
-		},
-		UpdateExpression: aws.String("SET #value = if_not_exists(#value, :start) + :incr"),
-		ExpressionAttributeNames: map[string]string{
-			"#value": "id",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":incr":  toN("1"),
-			":start": toN("0"),
-		},
-		ReturnValues: types.ReturnValueUpdatedNew,
-	})
-	if err != nil {
-		return
-	}
-
-	c := Response{}
-	if err = attributevalue.UnmarshalMap(res.Attributes, &c); err != nil {
-		return
-	}
-
-	return c.Id, nil
-}
-
-type Response struct {
-	Id int `dynamodbav:"id"`
 }
 
 func toS(v string) *types.AttributeValueMemberS {
