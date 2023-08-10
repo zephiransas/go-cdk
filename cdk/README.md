@@ -18,7 +18,24 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 ### Cognito User Pool
 
-TBD
+以下のコマンドで適当なユーザを作成
+
+```
+aws cognito-idp admin-create-user --user-pool-id [ユーザプールID] \
+--username [一意なユーザ名] \
+--user-attributes Name=email,Value="hogefuga@example.com" Name=email_verified,Value=true \
+--message-action SUPPRESS
+```
+
+その後、以下のコマンドでパスワードを設定
+
+```
+aws cognito-idp admin-set-user-password \
+--user-pool-id [ユーザプールID] \
+--username [一意なユーザ名] \
+--password [パスワード] \
+--permanent
+```
 
 ### SSM Parameter Store
 
