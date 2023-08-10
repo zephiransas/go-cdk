@@ -56,3 +56,27 @@ func TestTodoRepository_List(t *testing.T) {
 	// 他ユーザのデータが存在しないこと
 	assert.NotContains(t, subs, "DUMMY")
 }
+
+func TestTodoRepository_Add(t *testing.T) {
+	r, ctx := setupTestTodoRepository(t)
+	CleanTable(t, ctx, "todos-go")
+
+	PutItem(t, ctx, "todos-go", map[string]types.AttributeValue{
+		"user_id": toS("sub"),
+		"id":      toN("1"),
+		"title":   toS("todo1"),
+		"done":    toBOOL(false),
+	})
+	PutItem(t, ctx, "todos-go-counter", map[string]types.AttributeValue{
+		"user_id": toS("sub"),
+		"id":      toN("1"),
+	})
+
+	todo, err := r.Add(ctx, "sub", "test_title")
+	assert.NoError(t, err)
+
+	assert.Equal(t, "sub", todo.UserId)
+	assert.Equal(t, 2, todo.Id)
+	assert.Equal(t, "test_title", todo.Title)
+	assert.Equal(t, false, todo.Done)
+}
