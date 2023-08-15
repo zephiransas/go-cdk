@@ -20,7 +20,6 @@ func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res ev
 		s    service.TodoService
 		body addRequestBody
 		todo domain.Todo
-		j    []byte
 	)
 
 	if s, err = service.NewTodoService(ctx); err != nil {
@@ -35,10 +34,7 @@ func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res ev
 		return events.APIGatewayProxyResponse{StatusCode: 503}, err
 	}
 
-	if j, err = json.Marshal(todo); err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 503}, err
-	}
-	return events.APIGatewayProxyResponse{Body: string(j), StatusCode: 200}, nil
+	return middleware.JsonResponse(200, todo)
 }
 
 func main() {

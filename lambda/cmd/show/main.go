@@ -5,7 +5,6 @@ import (
 	"app/middleware"
 	"app/service"
 	"context"
-	"encoding/json"
 	"errors"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -31,11 +30,7 @@ func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res ev
 		}
 	}
 
-	var j []byte
-	if j, err = json.Marshal(todo); err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 503}, err
-	}
-	return events.APIGatewayProxyResponse{Body: string(j), StatusCode: 200}, nil
+	return middleware.JsonResponse(200, todo)
 }
 
 func main() {

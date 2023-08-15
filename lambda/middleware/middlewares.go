@@ -4,6 +4,7 @@ import (
 	appContext "app/context"
 	. "app/logger"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -56,4 +57,12 @@ func Logging() LambdaMiddlewareFunc {
 			return res, err
 		}
 	}
+}
+
+func JsonResponse(status int, body any) (events.APIGatewayProxyResponse, error) {
+	j, err := json.Marshal(body)
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	}
+	return events.APIGatewayProxyResponse{StatusCode: status, Body: string(j)}, nil
 }

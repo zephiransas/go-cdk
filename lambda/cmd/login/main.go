@@ -7,7 +7,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -77,12 +76,7 @@ func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res ev
 		IdToken:      *out.AuthenticationResult.IdToken,
 	}
 
-	var j []byte
-	if j, err = json.Marshal(r); err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 503}, err
-	}
-
-	return events.APIGatewayProxyResponse{Body: string(j), StatusCode: 200}, nil
+	return middleware.JsonResponse(200, r)
 }
 
 func makeHMAC(username string, clientSecret string) string {
