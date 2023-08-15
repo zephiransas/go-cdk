@@ -1,6 +1,7 @@
 package service
 
 import (
+	appContext "app/context"
 	"app/domain"
 	"app/domain/repository"
 	"app/infra/dynamodb"
@@ -8,11 +9,11 @@ import (
 )
 
 type TodoService interface {
-	List(ctx context.Context, sub string) (todos []domain.Todo, err error)
-	Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error)
-	Get(ctx context.Context, sub string, id string) (todo domain.Todo, err error)
-	Done(ctx context.Context, sub string, id string) (todo domain.Todo, err error)
-	Delete(ctx context.Context, sub string, id string) (todo domain.Todo, err error)
+	List(ctx context.Context) (todos []domain.Todo, err error)
+	Add(ctx context.Context, title string) (todo domain.Todo, err error)
+	Get(ctx context.Context, id string) (todo domain.Todo, err error)
+	Done(ctx context.Context, id string) (todo domain.Todo, err error)
+	Delete(ctx context.Context, id string) (todo domain.Todo, err error)
 }
 
 type todoService struct {
@@ -27,39 +28,37 @@ func NewTodoService(ctx context.Context) (s TodoService, err error) {
 	return &todoService{repo}, nil
 }
 
-func (s *todoService) List(ctx context.Context, sub string) (todos []domain.Todo, err error) {
-	if todos, err = s.repo.List(ctx, sub); err != nil {
+func (s *todoService) List(ctx context.Context) (todos []domain.Todo, err error) {
+	if todos, err = s.repo.List(ctx, appContext.GetSub(ctx)); err != nil {
 		return
 	}
 	return
 }
 
-func (s *todoService) Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error) {
-	if todo, err = s.repo.Add(ctx, sub, title); err != nil {
+func (s *todoService) Add(ctx context.Context, title string) (todo domain.Todo, err error) {
+	if todo, err = s.repo.Add(ctx, appContext.GetSub(ctx), title); err != nil {
 		return
 	}
 	return
 }
 
-func (s *todoService) Get(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
-	if todo, err = s.repo.Get(ctx, sub, id); err != nil {
+func (s *todoService) Get(ctx context.Context, id string) (todo domain.Todo, err error) {
+	if todo, err = s.repo.Get(ctx, appContext.GetSub(ctx), id); err != nil {
 		return
 	}
 	return
 }
 
-func (s *todoService) Done(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
-	if todo, err = s.repo.Done(ctx, sub, id); err != nil {
+func (s *todoService) Done(ctx context.Context, id string) (todo domain.Todo, err error) {
+	if todo, err = s.repo.Done(ctx, appContext.GetSub(ctx), id); err != nil {
 		return
 	}
-
 	return
 }
 
-func (s *todoService) Delete(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
-	if todo, err = s.repo.Delete(ctx, sub, id); err != nil {
+func (s *todoService) Delete(ctx context.Context, id string) (todo domain.Todo, err error) {
+	if todo, err = s.repo.Delete(ctx, appContext.GetSub(ctx), id); err != nil {
 		return
 	}
-
 	return
 }

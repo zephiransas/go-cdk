@@ -17,7 +17,7 @@ func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res ev
 		return
 	}
 
-	todo, err := s.Delete(ctx, req.RequestContext.Authorizer["sub"].(string), req.PathParameters["id"])
+	todo, err := s.Delete(ctx, req.PathParameters["id"])
 	if err != nil {
 		var notFound *dynamodb.ResourceNotFoundError
 		if errors.As(err, &notFound) {

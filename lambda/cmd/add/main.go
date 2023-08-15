@@ -30,7 +30,7 @@ func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res ev
 		return events.APIGatewayProxyResponse{StatusCode: 503}, err
 	}
 
-	if todo, err = s.Add(ctx, req.RequestContext.Authorizer["sub"].(string), body.Title); err != nil {
+	if todo, err = s.Add(ctx, body.Title); err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 503}, err
 	}
 

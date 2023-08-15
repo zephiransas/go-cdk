@@ -17,7 +17,7 @@ func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res ev
 		return events.APIGatewayProxyResponse{StatusCode: 503}, err
 	}
 
-	todo, err := s.Get(ctx, req.RequestContext.Authorizer["sub"].(string), req.PathParameters["id"])
+	todo, err := s.Get(ctx, req.PathParameters["id"])
 	if err != nil {
 		var notFound *dynamodb.ResourceNotFoundError
 		if errors.As(err, &notFound) {

@@ -15,7 +15,7 @@ func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res ev
 		return
 	}
 
-	todo, err := s.Done(ctx, req.RequestContext.Authorizer["sub"].(string), req.PathParameters["id"])
+	todo, err := s.Done(ctx, req.PathParameters["id"])
 	if err != nil {
 		return
 	}
