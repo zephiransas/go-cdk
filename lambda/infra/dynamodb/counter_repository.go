@@ -2,6 +2,7 @@ package dynamodb
 
 import (
 	"app/domain/repository"
+	"app/domain/vo"
 	"app/util"
 	"context"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -26,13 +27,13 @@ func NewCounterRepository(ctx context.Context) (r repository.CounterRepository, 
 	return
 }
 
-func (r *counterRepository) GenerateId(ctx context.Context, sub string) (id int, err error) {
+func (r *counterRepository) GenerateId(ctx context.Context, sub vo.SubId) (id int, err error) {
 	var res *dynamodb.UpdateItemOutput
 
 	res, err = r.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String("todos-go-counter"),
 		Key: map[string]types.AttributeValue{
-			"user_id": toS(sub),
+			"user_id": toS(string(sub)),
 		},
 		UpdateExpression: aws.String("SET #value = if_not_exists(#value, :start) + :incr"),
 		ExpressionAttributeNames: map[string]string{

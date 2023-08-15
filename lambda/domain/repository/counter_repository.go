@@ -1,7 +1,10 @@
 package repository
 
-import "context"
+import (
+	"app/domain/vo"
+	"context"
+)
 
 type CounterRepository interface {
-	GenerateId(ctx context.Context, sub string) (id int, err error)
+	GenerateId(ctx context.Context, sub vo.SubId) (id int, err error)
 }

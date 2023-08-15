@@ -3,6 +3,7 @@ package dynamodb
 import (
 	"app/domain"
 	"app/domain/repository"
+	"app/domain/vo"
 	. "app/logger"
 	"app/util"
 	"context"
@@ -35,11 +36,11 @@ func NewTodoRepository(ctx context.Context) (r repository.TodoRepository, err er
 	return
 }
 
-func (r *todoRepository) List(ctx context.Context, sub string) (todos []domain.Todo, err error) {
+func (r *todoRepository) List(ctx context.Context, sub vo.SubId) (todos []domain.Todo, err error) {
 	var out *dynamodb.QueryOutput
 
 	// ref: https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/gov2/dynamodb
-	ex := expression.Key("user_id").Equal(expression.Value(sub))
+	ex := expression.Key("user_id").Equal(expression.Value(string(sub)))
 	expr, _ := expression.NewBuilder().WithKeyCondition(ex).Build()
 
 	var input *dynamodb.QueryInput
@@ -59,14 +60,14 @@ func (r *todoRepository) List(ctx context.Context, sub string) (todos []domain.T
 	return
 }
 
-func (r *todoRepository) Add(ctx context.Context, sub string, title string) (todo domain.Todo, err error) {
+func (r *todoRepository) Add(ctx context.Context, sub vo.SubId, title string) (todo domain.Todo, err error) {
 	var id int
 	if id, err = r.counter.GenerateId(ctx, sub); err != nil {
 		return
 	}
 
 	item := map[string]types.AttributeValue{
-		"user_id": toS(sub),
+		"user_id": toS(string(sub)),
 		"id":      toN(strconv.Itoa(id)),
 		"title":   toS(title),
 		"done":    toBOOL(false),
@@ -85,7 +86,7 @@ func (r *todoRepository) Add(ctx context.Context, sub string, title string) (tod
 	return
 }
 
-func (r *todoRepository) Get(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
+func (r *todoRepository) Get(ctx context.Context, sub vo.SubId, id string) (todo domain.Todo, err error) {
 	var out *dynamodb.GetItemOutput
 
 	Log(ctx).Debug(fmt.Sprintf("sub = %s, id = %s", sub, id))
@@ -93,7 +94,7 @@ func (r *todoRepository) Get(ctx context.Context, sub string, id string) (todo d
 	out, err = r.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String("todos-go"),
 		Key: map[string]types.AttributeValue{
-			"user_id": toS(sub),
+			"user_id": toS(string(sub)),
 			"id":      toN(id),
 		},
 	})
@@ -112,13 +113,13 @@ func (r *todoRepository) Get(ctx context.Context, sub string, id string) (todo d
 	return
 }
 
-func (r *todoRepository) Done(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
+func (r *todoRepository) Done(ctx context.Context, sub vo.SubId, id string) (todo domain.Todo, err error) {
 	var res *dynamodb.UpdateItemOutput
 
 	res, err = r.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String("todos-go"),
 		Key: map[string]types.AttributeValue{
-			"user_id": toS(sub),
+			"user_id": toS(string(sub)),
 			"id":      toN(id),
 		},
 		UpdateExpression: aws.String("SET #value = :done"),
@@ -139,13 +140,13 @@ func (r *todoRepository) Done(ctx context.Context, sub string, id string) (todo 
 	return
 }
 
-func (r *todoRepository) Delete(ctx context.Context, sub string, id string) (todo domain.Todo, err error) {
+func (r *todoRepository) Delete(ctx context.Context, sub vo.SubId, id string) (todo domain.Todo, err error) {
 	var res *dynamodb.DeleteItemOutput
 
 	res, err = r.client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: aws.String("todos-go"),
 		Key: map[string]types.AttributeValue{
-			"user_id": toS(sub),
+			"user_id": toS(string(sub)),
 			"id":      toN(id),
 		},
 		ReturnValues: types.ReturnValueAllOld,

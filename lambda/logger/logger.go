@@ -34,6 +34,6 @@ func Log(ctx context.Context) *logrus.Entry {
 	subId := appContext.GetSub(ctx)
 	return logger.WithFields(map[string]interface{}{
 		requestIdKey: requestId,
-		subIdKey:     subId,
+		subIdKey:     string(subId),
 	})
 }

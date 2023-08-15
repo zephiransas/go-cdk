@@ -1,6 +1,7 @@
 package context
 
 import (
+	"app/domain/vo"
 	"context"
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -15,10 +16,10 @@ func SetSub(c context.Context, req events.APIGatewayProxyRequest) context.Contex
 	return context.WithValue(c, subKey, sub)
 }
 
-func GetSub(c context.Context) string {
+func GetSub(c context.Context) vo.SubId {
 	v, ok := c.Value(subKey).(string)
 	if !ok {
 		return "Not Authorized"
 	}
-	return v
+	return vo.NewSubId(v)
 }
