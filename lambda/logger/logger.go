@@ -4,6 +4,7 @@ import (
 	appContext "app/context"
 	"context"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
 const (
@@ -18,7 +19,9 @@ const (
 
 func newLogger() *logrus.Logger {
 	l := logrus.StandardLogger()
-	l.SetFormatter(&logrus.JSONFormatter{})
+	l.SetFormatter(&logrus.JSONFormatter{
+		TimestampFormat: time.RFC3339Nano,
+	})
 	lv, _ := logrus.ParseLevel(logLevel)
 	l.SetLevel(lv)
 	return l
