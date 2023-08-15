@@ -53,8 +53,9 @@ func RequestId() LambdaMiddlewareFunc {
 func Logging() LambdaMiddlewareFunc {
 	return func(next LambdaHandlerFunc) LambdaHandlerFunc {
 		return func(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+			Log(ctx).Info(fmt.Sprintf("req: %+v", request))
 			res, err := next(ctx, request)
-			Log(ctx).Info(fmt.Sprintf("req: %+v, res: %+v", request, res))
+			Log(ctx).Info(fmt.Sprintf("res: %+v", res))
 			return res, err
 		}
 	}
