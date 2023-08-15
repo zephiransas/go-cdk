@@ -31,6 +31,7 @@ func (m *Middleware) Apply(handler LambdaHandlerFunc) LambdaHandlerFunc {
 func DefaultMiddlewares() []LambdaMiddlewareFunc {
 	return []LambdaMiddlewareFunc{
 		RequestId(),
+		SubId(),
 		Logging(),
 		Recover(),
 	}
@@ -44,6 +45,16 @@ func RequestId() LambdaMiddlewareFunc {
 	return func(next LambdaHandlerFunc) LambdaHandlerFunc {
 		return func(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 			c := appContext.SetRequestId(ctx)
+			res, err := next(c, request)
+			return res, err
+		}
+	}
+}
+
+func SubId() LambdaMiddlewareFunc {
+	return func(next LambdaHandlerFunc) LambdaHandlerFunc {
+		return func(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+			c := appContext.SetSub(ctx, request)
 			res, err := next(c, request)
 			return res, err
 		}

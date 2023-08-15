@@ -12,6 +12,8 @@ const (
 
 	// ログに出力するjsonのキー
 	requestIdKey = "requestId"
+
+	subIdKey = "subId"
 )
 
 func newLogger() *logrus.Logger {
@@ -26,7 +28,9 @@ var logger = newLogger()
 
 func Log(ctx context.Context) *logrus.Entry {
 	requestId := appContext.GetRequestId(ctx)
+	subId := appContext.GetSub(ctx)
 	return logger.WithFields(map[string]interface{}{
 		requestIdKey: requestId,
+		subIdKey:     subId,
 	})
 }
