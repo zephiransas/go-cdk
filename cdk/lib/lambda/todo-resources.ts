@@ -26,7 +26,7 @@ export class TodoResources {
 
   private createListHandler: (scope: Construct) => lambda.Function = scope => {
     const listHandler = new GoFunction(scope, 'todos-list-lambda', {
-      entry: '../lambda/cmd/list',
+      entry: '../lambda/cmd/todos/list',
     })
 
     listHandler.addToRolePolicy(new iam.PolicyStatement({
@@ -41,7 +41,7 @@ export class TodoResources {
 
   private createAddHandler: (scope: Construct) => lambda.Function = scope => {
     const addHandler = new GoFunction(scope, 'todos-add-lambda', {
-      entry: '../lambda/cmd/add',
+      entry: '../lambda/cmd/todos/add',
     })
     addHandler.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
@@ -62,7 +62,7 @@ export class TodoResources {
 
   private createGetHandler: (scope: Construct) => lambda.Function = scope => {
     const addHandler = new GoFunction(scope, 'todos-get-lambda', {
-      entry: '../lambda/cmd/show',
+      entry: '../lambda/cmd/todos/show',
     })
     addHandler.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
@@ -76,7 +76,7 @@ export class TodoResources {
 
   private createDoneHandler: (scope: Construct) => lambda.Function = scope => {
     const doneHandler = new GoFunction(scope, 'todos-done-lambda', {
-      entry: '../lambda/cmd/done',
+      entry: '../lambda/cmd/todos/done',
     })
     doneHandler.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
@@ -90,7 +90,7 @@ export class TodoResources {
 
   private createDeleteHandler: (scope: Construct) => lambda.Function = scope => {
     const f = new GoFunction(scope, 'todos-delete-lambda', {
-      entry: '../lambda/cmd/delete',
+      entry: '../lambda/cmd/todos/delete',
     })
     f.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
