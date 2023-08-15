@@ -1,22 +1,17 @@
 package main
 
 import (
-	appContext "app/context"
 	"app/infra/dynamodb"
-	. "app/logger"
+	"app/middleware"
 	"app/service"
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
-
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (res events.APIGatewayProxyResponse, err error) {
-	ctx := appContext.SetRequestId(c)
-	Log(ctx).Info(fmt.Sprintf("START: DELETE /todos/%s", req.PathParameters["id"]))
+func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res events.APIGatewayProxyResponse, err error) {
 
 	var s service.TodoService
 	if s, err = service.NewTodoService(ctx); err != nil {
@@ -45,5 +40,6 @@ func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (res even
 }
 
 func main() {
-	lambda.Start(HandleEvent)
+	m := middleware.NewMiddleware(middleware.DefaultMiddlewares()...)
+	lambda.Start(m.Apply(HandleEvent))
 }

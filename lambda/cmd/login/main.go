@@ -1,8 +1,8 @@
 package main
 
 import (
-	appContext "app/context"
 	. "app/logger"
+	"app/middleware"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -29,9 +29,7 @@ type LoginResponse struct {
 	IdToken      string `json:"id_token"`
 }
 
-func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (res events.APIGatewayProxyResponse, err error) {
-	ctx := appContext.SetRequestId(c)
-	Log(ctx).Info("START: oauth/token")
+func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res events.APIGatewayProxyResponse, err error) {
 
 	cfg, _ := config.LoadDefaultConfig(ctx)
 	client := cognitoidentityprovider.NewFromConfig(cfg)
@@ -106,5 +104,6 @@ func getClientSecret(ctx *context.Context, cfg *aws.Config) (v string, err error
 }
 
 func main() {
-	lambda.Start(HandleEvent)
+	m := middleware.NewMiddleware(middleware.DefaultMiddlewares()...)
+	lambda.Start(m.Apply(HandleEvent))
 }

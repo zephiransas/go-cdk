@@ -1,9 +1,8 @@
 package main
 
 import (
-	appContext "app/context"
 	"app/domain"
-	. "app/logger"
+	"app/middleware"
 	"app/service"
 	"context"
 	"encoding/json"
@@ -16,10 +15,7 @@ type addRequestBody struct {
 	Title string `json:"title"`
 }
 
-func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (res events.APIGatewayProxyResponse, err error) {
-	ctx := appContext.SetRequestId(c)
-	Log(ctx).Info("START: todos/add")
-
+func HandleEvent(ctx context.Context, req events.APIGatewayProxyRequest) (res events.APIGatewayProxyResponse, err error) {
 	var (
 		s    service.TodoService
 		body addRequestBody
@@ -46,5 +42,6 @@ func HandleEvent(c context.Context, req events.APIGatewayProxyRequest) (res even
 }
 
 func main() {
-	lambda.Start(HandleEvent)
+	m := middleware.NewMiddleware(middleware.DefaultMiddlewares()...)
+	lambda.Start(m.Apply(HandleEvent))
 }
