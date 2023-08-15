@@ -2,6 +2,7 @@ package dynamodb
 
 import (
 	"app/domain/repository"
+	"app/domain/vo"
 	"app/testutil"
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -50,7 +51,7 @@ func TestTodoRepository_List(t *testing.T) {
 
 	var subs []string
 	for _, v := range res {
-		subs = append(subs, v.UserId)
+		subs = append(subs, string(v.UserId))
 	}
 
 	// 他ユーザのデータが存在しないこと
@@ -72,11 +73,31 @@ func TestTodoRepository_Add(t *testing.T) {
 		"id":      toN("1"),
 	})
 
-	todo, err := r.Add(ctx, "sub", "test_title")
+	todo, err := r.Add(ctx, vo.NewSubId("sub"), "test_title")
 	assert.NoError(t, err)
 
-	assert.Equal(t, "sub", todo.UserId)
+	assert.Equal(t, vo.NewSubId("sub"), todo.UserId)
 	assert.Equal(t, 2, todo.Id)
 	assert.Equal(t, "test_title", todo.Title)
+	assert.Equal(t, false, todo.Done)
+}
+
+func TestTodoRepository_Get(t *testing.T) {
+	r, ctx := setupTestTodoRepository(t)
+	CleanTable(t, ctx, "todos-go")
+
+	PutItem(t, ctx, "todos-go", map[string]types.AttributeValue{
+		"user_id": toS("sub"),
+		"id":      toN("1"),
+		"title":   toS("todo1"),
+		"done":    toBOOL(false),
+	})
+
+	todo, err := r.Get(ctx, vo.NewSubId("sub"), "1")
+	assert.NoError(t, err)
+
+	assert.Equal(t, vo.NewSubId("sub"), todo.UserId)
+	assert.Equal(t, 1, todo.Id)
+	assert.Equal(t, "todo1", todo.Title)
 	assert.Equal(t, false, todo.Done)
 }
