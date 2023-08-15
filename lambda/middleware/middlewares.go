@@ -32,6 +32,7 @@ func DefaultMiddlewares() []LambdaMiddlewareFunc {
 	return []LambdaMiddlewareFunc{
 		RequestId(),
 		Logging(),
+		Recover(),
 	}
 }
 
@@ -55,6 +56,23 @@ func Logging() LambdaMiddlewareFunc {
 			res, err := next(ctx, request)
 			Log(ctx).Info(fmt.Sprintf("req: %+v, res: %+v", request, res))
 			return res, err
+		}
+	}
+}
+
+func Recover() LambdaMiddlewareFunc {
+	return func(next LambdaHandlerFunc) LambdaHandlerFunc {
+		return func(ctx context.Context, request events.APIGatewayProxyRequest) (res events.APIGatewayProxyResponse, err error) {
+			defer func() {
+				if r := recover(); r != nil {
+					err, ok := r.(error)
+					if !ok {
+						err = fmt.Errorf("%+v", r)
+					}
+					res = events.APIGatewayProxyResponse{StatusCode: 500, Body: err.Error()}
+				}
+			}()
+			return next(ctx, request)
 		}
 	}
 }
