@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ddb from 'aws-cdk-lib/aws-dynamodb'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
-import {RemovalPolicy} from 'aws-cdk-lib';
+import {RemovalPolicy, Size} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import { TodoResources } from './lambda/todo-resources';
 import { AuthResources } from './lambda/auth-resources';
@@ -49,7 +49,9 @@ export class CdkStack extends cdk.Stack {
     const todoResources = new TodoResources(this, table, counterTable)
 
     // API Gateway
-    const api = new apigateway.RestApi(this, "todo-api")
+    const api = new apigateway.RestApi(this, "todo-api" , {
+      minCompressionSize: Size.bytes(0)
+    })
 
     const oauth = api.root.addResource("oauth")
     oauth.addResource("login").addMethod("GET", new apigateway.LambdaIntegration(authResources.loginHandler))
