@@ -4,10 +4,8 @@ import (
 	"app/domain"
 	"app/domain/repository"
 	"app/domain/vo"
-	. "app/logger"
 	"app/util"
 	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"strconv"
 
@@ -89,8 +87,6 @@ func (r *todoRepository) Add(ctx context.Context, sub vo.SubId, title string) (t
 func (r *todoRepository) Get(ctx context.Context, sub vo.SubId, id string) (todo domain.Todo, err error) {
 	var out *dynamodb.GetItemOutput
 
-	Log(ctx).Debug(fmt.Sprintf("sub = %s, id = %s", sub, id))
-
 	out, err = r.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String("todos-go"),
 		Key: map[string]types.AttributeValue{
@@ -116,20 +112,19 @@ func (r *todoRepository) Get(ctx context.Context, sub vo.SubId, id string) (todo
 func (r *todoRepository) Done(ctx context.Context, sub vo.SubId, id string) (todo domain.Todo, err error) {
 	var res *dynamodb.UpdateItemOutput
 
+	update := expression.Set(expression.Name("done"), expression.Value(true))
+	expr, err := expression.NewBuilder().WithUpdate(update).Build()
+
 	res, err = r.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String("todos-go"),
 		Key: map[string]types.AttributeValue{
 			"user_id": toS(string(sub)),
 			"id":      toN(id),
 		},
-		UpdateExpression: aws.String("SET #value = :done"),
-		ExpressionAttributeNames: map[string]string{
-			"#value": "done",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":done": toBOOL(true),
-		},
-		ReturnValues: types.ReturnValueAllNew,
+		UpdateExpression:          expr.Update(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ReturnValues:              types.ReturnValueAllNew,
 	})
 	if err != nil {
 		return
