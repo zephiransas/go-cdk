@@ -102,6 +102,21 @@ func TestTodoRepository_Get(t *testing.T) {
 	assert.Equal(t, false, todo.Done)
 }
 
+func TestTodoRepository_Get_NotFound(t *testing.T) {
+	r, ctx := setupTestTodoRepository(t)
+	CleanTable(t, ctx, "todos-go")
+
+	PutItem(t, ctx, "todos-go", map[string]types.AttributeValue{
+		"user_id": toS("sub"),
+		"id":      toN("1"),
+		"title":   toS("todo1"),
+		"done":    toBOOL(false),
+	})
+
+	_, err := r.Get(ctx, vo.NewSubId("sub"), "111")
+	assert.Error(t, err, NewResourceNotFoundError())
+}
+
 func TestTodoRepository_Done(t *testing.T) {
 	r, ctx := setupTestTodoRepository(t)
 	CleanTable(t, ctx, "todos-go")
